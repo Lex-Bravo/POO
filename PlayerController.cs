@@ -11,23 +11,48 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     public float run_speed;
-    public float jump_speed;
+    public float jump_Force;
 
     Rigidbody2D rb2D;
 
-    public bool better_jump = false;
+    bool doublejump;
     public float FallMultiplier = 0.5f;
-    public float low_jumpMultiplier = 1f;
 
     public SpriteRenderer spriterender;
     public Animator animator;
-
+    bool isGrounded;
+    public Transform groundcheck;
+    public LayerMask groundlayer;
 
     void Start()
     {
         rb2D = GetComponent<Rigidbody2D>();
     }
 
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (isGrounded)
+            {
+                Jump();
+                doublejump = true;
+            }
+            else if (doublejump)
+            {
+                jump_Force = jump_Force / 2;
+                Jump();
+                doublejump = false;
+
+                jump_Force = jump_Force * 2;
+            }
+        }
+    }
+
+    void Jump()
+    {
+        rb2D.velocity = Vector2.up * jump_Force;
+    }
     void FixedUpdate()
     {
         //Movimiento a los lados 
@@ -50,32 +75,9 @@ public class PlayerController : MonoBehaviour
             animator.SetBool("run", false);
         }
 
-        //Salto
+        //checkground
 
-        if (Input.GetKey("w") || Input.GetKey("space") && Checkground.isGrounded)
-        {
-            rb2D.velocity = new Vector2(rb2D.velocity.x, jump_speed);
-            animator.SetBool("jump", true);
-            animator.SetBool("run", false);
-        }
-        else
-        {
-           
-            animator.SetBool("jump", false);
-        }
-
-        if (better_jump)
-        {
-            if (rb2D.velocity.y < 0)
-            {
-                rb2D.velocity += Vector2.up * Physics2D.gravity.y * (FallMultiplier) * Time.deltaTime;
-            }
-            if (rb2D.velocity.y > 0 && !Input.GetKey("w"))
-            {
-                rb2D.velocity += Vector2.up * Physics2D.gravity.y * (low_jumpMultiplier) * Time.deltaTime;
-            }
-        }
-
+        isGrounded = Physics2D.OverlapCircle(groundcheck.position, 0.2f, groundlayer);
     }
     
 }
